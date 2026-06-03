@@ -1,0 +1,17 @@
+ollama
+langchain
+langchain-community
+langchain-experimental
+langchain-ollama
+pandas
+openpyxl
+tabulate
+fastapi
+uvicorn
+python-multipart
+jinja2
+numpy
+scikit-learn
+matplotlib
+
+-e .

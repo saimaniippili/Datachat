@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataChat - AI Data Analysis</title>
+    <!-- Use Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="/static/js/marked.min.js"></script>
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <div class="bar bar-1"></div>
+                        <div class="bar bar-2"></div>
+                        <div class="bar bar-3"></div>
+                    </div>
+                    <h2>DataChat</h2>
+                </div>
+            </div>
+            
+            <button id="new-chat-btn" class="nav-btn neo-btn new-chat-btn">+ New Chat</button>
+            
+            <!-- File Upload Section -->
+            <div class="upload-container neo-border" id="drop-zone">
+                <div class="upload-icon">📁</div>
+                <p>Drop your CSV/Excel here, or click.</p>
+                <input type="file" id="file-input" accept=".csv, .xls, .xlsx" hidden>
+                <div id="upload-status" class="status-message"></div>
+            </div>
+            
+            <!-- Data Profile Card -->
+            <div id="data-profile" class="profile-card neo-border" style="display: none;">
+                <h3>Dataset Profile</h3>
+                <div id="profile-stats"></div>
+            </div>
+            
+            <div class="sessions-list" id="sessions-list">
+                <!-- Sessions will be loaded here -->
+                <div class="session-item">Loading past chats...</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Navbar -->
+            <nav class="navbar neo-border">
+                <div class="nav-links">
+                    <select id="model-select" class="nav-btn model-select neo-btn">
+                        <option value="">Loading models...</option>
+                    </select>
+                    <a href="https://github.com" target="_blank" class="nav-btn neo-btn">GitHub</a>
+                    <button id="export-btn" class="nav-btn neo-btn" style="background-color: #88ff88;">Export Report</button>
+                </div>
+            </nav>
+
+
+
+            <!-- Chat Interface -->
+            <div class="chat-container neo-border">
+                <div class="chat-header">
+                    <h2>DATA ANALYSIS CHAT</h2>
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span id="connection-status">Upload Data to Start</span>
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message assistant">
+                        <div class="message-bubble neo-border">
+                            Upload a dataset to start a new chat! Or select a previous chat from the sidebar.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <input type="text" id="chat-input" class="neo-border" placeholder="Ask a question about your data..." disabled>
+                    <button id="send-btn" class="action-btn neo-border" disabled>SEND</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="image-modal" class="image-modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content neo-border" id="modal-img">
+    </div>
+
+    <script src="/static/js/app.js?v=2"></script>
+</body>
+</html>
