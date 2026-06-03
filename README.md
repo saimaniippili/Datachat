@@ -9,7 +9,8 @@ DataChat is an interactive web application that lets you analyze and explore you
 
 ## 📸 Application Interface
 
-![DataChat UI Screenshot](images/screenshot.png)
+<img width="1623" height="1012" alt="Screenshot 2026-06-03 192424" src="https://github.com/user-attachments/assets/e8953ebb-3be0-4289-92f1-34c9685d56b4" />
+
 
 ## ✨ Features
 
