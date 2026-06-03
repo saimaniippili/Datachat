@@ -7,19 +7,19 @@ DataChat is an interactive web application that lets you analyze and explore you
 [![FastAPI](https://img.shields.io/badge/FastAPI-latest-green)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 📸 Application Interface
+##  Application Interface
 
 <img width="1919" height="1012" alt="image" src="https://github.com/user-attachments/assets/388a8501-d22d-4449-8a55-af5d63a212d0" />
 
 
-## ✨ Features
+##  Features
 
 *   **Intuitive Chat Interface:** Ask questions about your data in a conversational manner.
 *   **Support for CSV and Excel Files:** Easily upload your data from common file formats.
 *   **Powerful Data Analysis:** Get answers to questions about trends, statistics, distributions, and relationships within your data.
 *   **Seamless Integration:** Leverages LangChain to connect Ollama with data analysis tools like Pandas.
 
-## 💻 System Requirements
+##  System Requirements
 
 To run this project smoothly (especially since it relies on running local Large Language Models), your system should meet the following requirements:
 
@@ -29,7 +29,7 @@ To run this project smoothly (especially since it relies on running local Large 
     *   **Recommended:** 16 GB to 32 GB RAM (necessary for smoothly running 8B parameter models like `llama3:8b` alongside pandas operations).
 *   **Storage:** At least 10-15 GB of free space for downloading the Ollama models and Python dependencies.
 
-## 🧠 Supported Models
+##  Supported Models
 
 DataChat supports various models via Ollama. You can select them directly from the UI dropdown:
 
@@ -38,7 +38,7 @@ DataChat supports various models via Ollama. You can select them directly from t
 *   <span style="color: #4caf50; font-weight: bold;">mistral:latest</span> - A strong alternative to Llama 3 for data tasks.
 *   <span style="color: #2196f3; font-weight: bold;">gemma2:2b</span> - Google's updated lightweight model.
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### 1. Prerequisites
 *   **Python 3.9+**
@@ -65,23 +65,23 @@ python src/main.py
 ```
 *This will start the local server and automatically open the DataChat UI in your web browser at `http://127.0.0.1:8000`.*
 
-## 💡 Usage
+##  Usage
 
 1.  **Upload Data:** Drag and drop or click to choose your CSV or Excel file on the left sidebar.
 2.  **Start Chatting:** Type your questions about the data in the chat input box at the bottom.
 3.  **Get Answers:** DataChat will process your question and display the answer, complete with any generated charts!
 
-## 📊 Examples
+##  Examples
 
 *   "What is the average age of customers?"
 *   "How many sales were made in each region?"
 *   "Which product category has the highest revenue?"
 *   "Show me a histogram of customer ages."
 
-## ⚙️ Customization
+##  Customization
 
 *   **LLM:** Experiment with different Ollama models for improved performance.
 *   **Data Analysis Tools:** Extend DataChat by adding custom LangChain tools to integrate with other analysis libraries or APIs.
 
-## 📄 License
+##  License
 This project is licensed under the Apache 2.0 License.
