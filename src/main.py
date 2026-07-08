@@ -341,7 +341,7 @@ def chat(request: ChatRequest):
             prefix=prefix_instructions,
             max_iterations=25,
             max_execution_time=300,
-            agent_executor_kwargs={"handle_parsing_errors": True, "early_stopping_method": "generate"},
+            agent_executor_kwargs={"handle_parsing_errors": True},
             number_of_head_rows=3
         )
         
