@@ -15,7 +15,7 @@ DataChat is an intelligent, conversational data analysis platform. It allows use
 
 ##  Application Interface
 
-<img width="1919" height="1012" alt="image" src="https://github.com/user-attachments/assets/388a8501-d22d-4449-8a55-af5d63a212d0" />
+<img width="1919" height="1012" alt="DataChat Interface" src="assets/screenshot.png" />
 
 ## How It Works
 
