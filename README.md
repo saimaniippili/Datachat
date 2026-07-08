@@ -1,4 +1,4 @@
-# DataChat 📊🤖
+# DataChat
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
@@ -17,7 +17,7 @@ DataChat is an intelligent, conversational data analysis platform. It allows use
 
 <img width="1919" height="1012" alt="image" src="https://github.com/user-attachments/assets/388a8501-d22d-4449-8a55-af5d63a212d0" />
 
-## 🚀 How It Works
+## How It Works
 
 1. **Upload Data:** Users drag-and-drop a `.csv` or `.xlsx` file into the interface.
 2. **AI Processing:** The backend uses LangChain's `create_pandas_dataframe_agent` to ingest the dataset into a Pandas DataFrame.
@@ -25,7 +25,7 @@ DataChat is an intelligent, conversational data analysis platform. It allows use
 4. **Execution & Visualization:** The AI interprets the intent, writes the required Python code using Pandas, executes it safely to find the answer, and generates Matplotlib charts.
 5. **Report Generation:** Users can export the entire conversation and generated visual insights into a professional PDF report.
 
-## 🏗️ Architecture & Approach
+## Architecture & Approach
 
 DataChat is designed with a **Separated Architecture**, splitting the frontend and backend to optimize deployment and scalability.
 
@@ -41,13 +41,13 @@ DataChat is designed with a **Separated Architecture**, splitting the frontend a
 - **Security:** We implemented robust CORS policies using FastAPI's `CORSMiddleware` to allow the Vercel frontend to securely query the API.
 - **Hosting:** Configured for **Render** (or similar containerized platforms) as a stateful Web Service with a Persistent Disk.
 
-## 🛠️ Key Challenges Solved
+## Key Challenges Solved
 
 - **Agent Context Limits:** We faced issues where the LLM agent would fail after multiple turns because the conversational history became too large. We solved this by implementing selective memory handling and strict token limits, ensuring the agent remains focused on the immediate data task.
 - **Dependency Conflicts:** Balancing `langchain-experimental`, newer `pydantic` versions, and `openai` clients caused environment crashes. We systematically resolved versioning conflicts to stabilize the Python environment.
 - **Stateful Deployment:** Standard serverless deployments (like Vercel) destroy local files, breaking file uploads and chart generation. We designed a dual-deployment strategy (Vercel + Render) so the stateful Python backend could securely store data while the frontend remains globally distributed.
 
-## 💻 Local Setup
+## Local Setup
 
 ### 1. Prerequisites
 *   **Python 3.9+**
