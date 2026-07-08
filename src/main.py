@@ -80,10 +80,8 @@ class DB:
         conn, is_pg = DB.get_conn()
         c = conn.cursor()
         if is_pg:
-            c.execute("DROP TABLE IF EXISTS messages")
-            c.execute("DROP TABLE IF EXISTS sessions")
             c.execute('''
-                CREATE TABLE sessions (
+                CREATE TABLE IF NOT EXISTS sessions (
                     id SERIAL PRIMARY KEY,
                     filename TEXT,
                     filepath TEXT,
@@ -91,7 +89,7 @@ class DB:
                 )
             ''')
             c.execute('''
-                CREATE TABLE messages (
+                CREATE TABLE IF NOT EXISTS messages (
                     id SERIAL PRIMARY KEY,
                     session_id INTEGER,
                     role TEXT,
@@ -101,10 +99,8 @@ class DB:
                 )
             ''')
         else:
-            c.execute("DROP TABLE IF EXISTS messages")
-            c.execute("DROP TABLE IF EXISTS sessions")
             c.execute('''
-                CREATE TABLE sessions (
+                CREATE TABLE IF NOT EXISTS sessions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     filename TEXT,
                     filepath TEXT,
@@ -112,7 +108,7 @@ class DB:
                 )
             ''')
             c.execute('''
-                CREATE TABLE messages (
+                CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     session_id INTEGER,
                     role TEXT,
