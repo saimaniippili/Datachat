@@ -343,9 +343,9 @@ def chat(request: ChatRequest):
             agent_type="tool-calling",
             allow_dangerous_code=True,
             prefix=prefix_instructions,
-            max_iterations=10,
+            max_iterations=25,
             max_execution_time=300,
-            agent_executor_kwargs={"handle_parsing_errors": True},
+            agent_executor_kwargs={"handle_parsing_errors": True, "early_stopping_method": "generate"},
             number_of_head_rows=3
         )
         
