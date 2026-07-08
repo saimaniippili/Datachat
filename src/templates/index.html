@@ -4,96 +4,192 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DataChat - AI Data Analysis</title>
-    <!-- Use Google Fonts (Inter) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Vanilla Tilt for 3D interactions -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+
+    <!-- App Styles -->
     <link rel="stylesheet" href="/static/css/style.css">
+    
+    <!-- Dependencies -->
     <script src="/static/js/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
     <div class="app-layout">
-        <!-- Sidebar -->
-        <aside class="sidebar">
+        
+        <!-- LEFT SIDEBAR -->
+        <aside class="sidebar-left">
             <div class="sidebar-header">
-                <div class="logo-container">
-                    <div class="logo-icon">
-                        <div class="bar bar-1"></div>
-                        <div class="bar bar-2"></div>
-                        <div class="bar bar-3"></div>
-                    </div>
-                    <h2>DataChat</h2>
+                <div class="logo">
+                    <i class="ph-fill ph-polygon"></i>
+                    <span>DATACHAT</span>
                 </div>
             </div>
             
-            <button id="new-chat-btn" class="nav-btn neo-btn new-chat-btn">+ New Chat</button>
+            <button id="new-chat-btn" class="btn-primary w-full mt-4">
+                <i class="ph ph-sparkle"></i> New Chat
+            </button>
             
-            <!-- File Upload Section -->
-            <div class="upload-container neo-border" id="drop-zone">
-                <div class="upload-icon">📁</div>
-                <p>Drop your CSV/Excel here, or click.</p>
-                <input type="file" id="file-input" accept=".csv, .xls, .xlsx" hidden>
-                <div id="upload-status" class="status-message"></div>
-            </div>
-            
-            <!-- Data Profile Card -->
-            <div id="data-profile" class="profile-card neo-border" style="display: none;">
-                <h3>Dataset Profile</h3>
-                <div id="profile-stats"></div>
+            <nav class="sidebar-nav mt-6">
+                <a href="#" class="nav-item active"><i class="ph ph-chat-circle-text"></i> Chats</a>
+                <a href="#" class="nav-item" id="open-settings-btn"><i class="ph ph-gear"></i> Settings</a>
+            </nav>
+
+            <div class="recent-chats-header mt-8">
+                <span>RECENT CHATS</span>
+                <i class="ph ph-magnifying-glass"></i>
             </div>
             
             <div class="sessions-list" id="sessions-list">
-                <!-- Sessions will be loaded here -->
-                <div class="session-item">Loading past chats...</div>
+                <!-- Sessions populated via JS -->
             </div>
+            
+            <a href="#" class="view-all-chats">View all chats &rarr;</a>
+
         </aside>
 
-        <!-- Main Content -->
+        <!-- CENTER MAIN CONTENT -->
         <main class="main-content">
+            
             <!-- Navbar -->
-            <nav class="navbar neo-border">
-                <div class="nav-links">
-                    <select id="model-select" class="nav-btn model-select neo-btn">
+            <header class="top-nav">
+                <div class="model-selector-wrapper">
+                    <i class="ph-fill ph-cube"></i>
+                    <select id="model-select" class="model-select">
                         <option value="">Loading models...</option>
                     </select>
-                    <a href="https://github.com" target="_blank" class="nav-btn neo-btn">GitHub</a>
-                    <button id="export-btn" class="nav-btn neo-btn" style="background-color: #88ff88;">Export Report</button>
-                </div>
-            </nav>
-
-
-
-            <!-- Chat Interface -->
-            <div class="chat-container neo-border">
-                <div class="chat-header">
-                    <h2>DATA ANALYSIS CHAT</h2>
-                    <div class="status-indicator">
-                        <span class="status-dot"></span>
-                        <span id="connection-status">Upload Data to Start</span>
-                    </div>
                 </div>
                 
-                <div class="chat-messages" id="chat-messages">
-                    <div class="message assistant">
-                        <div class="message-bubble neo-border">
-                            Upload a dataset to start a new chat! Or select a previous chat from the sidebar.
+                <div class="top-actions">
+                    <button id="export-btn" class="btn-primary-gradient">
+                        <i class="ph ph-trend-up"></i> Export Report
+                    </button>
+                    <button id="theme-toggle-btn" class="icon-btn"><i class="ph ph-moon"></i></button>
+                </div>
+            </header>
+
+            <!-- Chat Area Container -->
+            <div class="chat-wrapper" id="chat-wrapper">
+                
+                <!-- Initial Welcome Screen -->
+                <div class="welcome-screen" id="welcome-screen">
+                    <h1 class="welcome-title">Data <span>Analysis Chat</span></h1>
+                    <p class="welcome-subtitle">Ask questions about your data and get <span>actionable insights.</span></p>
+                    
+                    <!-- Upload Box -->
+                    <div class="upload-box" id="drop-zone">
+                        <div class="upload-icon-wrapper">
+                            <i class="ph ph-cloud-arrow-up"></i>
                         </div>
+                        <h3>Upload your dataset to begin</h3>
+                        <p>Supports CSV, Excel files up to 50MB</p>
+                        <button class="btn-outline mt-4" onclick="document.getElementById('file-input').click()">
+                            <i class="ph ph-folder"></i> Browse Files
+                        </button>
+                        <input type="file" id="file-input" accept=".csv, .xls, .xlsx" hidden>
+                        <div id="upload-status" class="mt-2 text-sm text-gray-400"></div>
+                    </div>
+                    
+                    <p class="text-sm text-gray-400 mb-4">Try asking something like:</p>
+                    <div class="suggestion-chips">
+                        <div class="chip"><i class="ph ph-trend-up"></i> What are the key trends in this data?</div>
+                        <div class="chip"><i class="ph ph-chart-bar"></i> Show me the top 10 by revenue</div>
+                        <div class="chip"><i class="ph ph-activity"></i> Detect anomalies in the dataset</div>
                     </div>
                 </div>
 
+                <!-- Chat Messages (hidden until upload) -->
+                <div class="chat-messages hidden" id="chat-messages">
+                    <!-- Messages populated via JS -->
+                </div>
+                
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="chat-input-wrapper">
                 <div class="chat-input-container">
-                    <input type="text" id="chat-input" class="neo-border" placeholder="Ask a question about your data..." disabled>
-                    <button id="send-btn" class="action-btn neo-border" disabled>SEND</button>
+                    <input type="text" id="chat-input" placeholder="Ask a question about your data..." disabled>
+                    
+                    <button id="send-btn" class="send-btn" disabled>
+                        <i class="ph-fill ph-paper-plane-tilt"></i>
+                    </button>
+                </div>
+                <div class="connection-status-text text-center mt-2 text-xs text-gray-500" id="connection-status">
+                    Upload Data to Start
                 </div>
             </div>
+
         </main>
+
+        <!-- RIGHT SIDEBAR -->
+        <aside class="sidebar-right">
+            
+            <div class="toolkit-panel">
+                <h3>Data Insights Toolkit</h3>
+                <p>Powerful analysis at your fingertips</p>
+                <div class="toolkit-grid">
+                    <button class="tool-btn"><i class="ph ph-pie-chart"></i> Summary</button>
+                    <button class="tool-btn"><i class="ph ph-dots-nine"></i> Correlation</button>
+                    <button class="tool-btn"><i class="ph ph-trend-up"></i> Trends</button>
+                    <button class="tool-btn"><i class="ph ph-target"></i> Outliers</button>
+                    <button class="tool-btn"><i class="ph ph-circles-three"></i> Clusters</button>
+                    <button class="tool-btn"><i class="ph ph-arrow-up-right"></i> Forecast</button>
+                </div>
+            </div>
+            
+            <div id="dataset-profile-panel" class="hidden">
+                <h3>Dataset Profile</h3>
+                <div id="dataset-stats" class="text-xs text-gray-500 mb-2"></div>
+                <div id="dataset-columns" class="columns-list"></div>
+            </div>
+            
+        </aside>
+
+    </div>
+
+    <!-- API Key Settings Modal -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-content-box">
+            <div class="modal-header">
+                <h2><i class="ph ph-gear"></i> API Settings</h2>
+                <button id="close-settings-btn" class="icon-btn"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-sm text-gray-400 mb-4">Provide your own API Key to use a custom LLM provider.</p>
+                
+                <div class="form-group">
+                    <label>API Base URL</label>
+                    <input type="text" id="api-base-url" class="settings-input" placeholder="https://integrate.api.nvidia.com/v1">
+                </div>
+                
+                <div class="form-group mt-4">
+                    <label>API Key</label>
+                    <input type="password" id="api-key" class="settings-input" placeholder="sk-... or nvapi-...">
+                </div>
+                
+                <div id="connection-test-result" class="mt-4 text-sm hidden"></div>
+            </div>
+            <div class="modal-footer mt-6 flex justify-between">
+                <button id="test-connection-btn" class="btn-outline"><i class="ph ph-plugs-connected"></i> Test Connection</button>
+                <button id="save-settings-btn" class="btn-primary-gradient"><i class="ph ph-check"></i> Save Settings</button>
+            </div>
+        </div>
     </div>
 
     <!-- Image Preview Modal -->
-    <div id="image-modal" class="image-modal">
-        <span class="close-modal">&times;</span>
-        <img class="modal-content neo-border" id="modal-img">
+    <div id="image-modal" class="image-modal hidden">
+        <span class="close-image-modal">&times;</span>
+        <img class="modal-img-content" id="modal-img">
     </div>
 
-    <script src="/static/js/app.js?v=2"></script>
+    <script src="/static/js/app.js?v=3"></script>
 </body>
 </html>

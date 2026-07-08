@@ -9,14 +9,24 @@ matplotlib.use('Agg')
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from langchain_experimental.agents import create_pandas_dataframe_agent
-from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
 from datetime import datetime
 
 import sys
 
 app = FastAPI(title="DataChat API")
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Setup directories for static files and templates
 if getattr(sys, 'frozen', False):
@@ -49,76 +59,152 @@ app.mount("/static/charts", StaticFiles(directory=CHARTS_DIR), name="charts")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
-# Database initialization
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS sessions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            filename TEXT,
-            filepath TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id INTEGER,
-            role TEXT,
-            content TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (session_id) REFERENCES sessions (id)
-        )
-    ''')
-    conn.commit()
-    conn.close()
 
-init_db()
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+class DB:
+    @staticmethod
+    def get_conn():
+        if DATABASE_URL:
+            import psycopg2
+            from psycopg2.extras import RealDictCursor
+            return psycopg2.connect(DATABASE_URL), True
+        else:
+            import sqlite3
+            conn = sqlite3.connect(DB_PATH)
+            conn.row_factory = sqlite3.Row
+            return conn, False
+
+    @staticmethod
+    def init():
+        conn, is_pg = DB.get_conn()
+        c = conn.cursor()
+        if is_pg:
+            c.execute("DROP TABLE IF EXISTS messages")
+            c.execute("DROP TABLE IF EXISTS sessions")
+            c.execute('''
+                CREATE TABLE sessions (
+                    id SERIAL PRIMARY KEY,
+                    filename TEXT,
+                    filepath TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            c.execute('''
+                CREATE TABLE messages (
+                    id SERIAL PRIMARY KEY,
+                    session_id INTEGER,
+                    role TEXT,
+                    content TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (session_id) REFERENCES sessions (id)
+                )
+            ''')
+        else:
+            c.execute("DROP TABLE IF EXISTS messages")
+            c.execute("DROP TABLE IF EXISTS sessions")
+            c.execute('''
+                CREATE TABLE sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    filename TEXT,
+                    filepath TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            c.execute('''
+                CREATE TABLE messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id INTEGER,
+                    role TEXT,
+                    content TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (session_id) REFERENCES sessions (id)
+                )
+            ''')
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def execute(query, params=(), commit=False, fetchone=False, fetchall=False, insert=False):
+        conn, is_pg = DB.get_conn()
+        if is_pg:
+            query = query.replace("?", "%s")
+            if insert:
+                query = query.rstrip("; ") + " RETURNING id"
+        
+        if is_pg and (fetchone or fetchall):
+            from psycopg2.extras import RealDictCursor
+            c = conn.cursor(cursor_factory=RealDictCursor)
+        else:
+            c = conn.cursor()
+            
+        c.execute(query, params)
+        
+        res = None
+        if insert:
+            if is_pg:
+                res = c.fetchone()['id']
+            else:
+                res = c.lastrowid
+        elif fetchone:
+            row = c.fetchone()
+            if row:
+                res = dict(row) if not is_pg else row
+        elif fetchall:
+            rows = c.fetchall()
+            if rows:
+                res = [dict(r) for r in rows] if not is_pg else rows
+            else:
+                res = []
+                
+        if commit:
+            conn.commit()
+        conn.close()
+        return res
+
+
+DB.init()
 
 @app.get("/")
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="index.html", context={"request": request})
 
 @app.get("/api/models")
 def get_models():
-    """Fetch available models from the local Ollama instance."""
-    import requests
+    """Return available NVIDIA API models."""
+    return {"models": ["nvidia/nemotron-3-ultra-550b-a55b", "gpt-4o", "gpt-4o-mini", "llama3"]}
+
+class ConnectionCheckRequest(BaseModel):
+    api_key: str
+    api_base_url: str = "https://integrate.api.nvidia.com/v1"
+
+@app.post("/api/check_connection")
+def check_connection(request: ConnectionCheckRequest):
     try:
-        response = requests.get("http://localhost:11434/api/tags", timeout=5)
-        response.raise_for_status()
-        data = response.json()
-        models = [model["name"] for model in data.get("models", [])]
-        return {"models": models}
+        llm = ChatOpenAI(
+            model="nvidia/nemotron-3-ultra-550b-a55b" if "nvidia" in request.api_base_url else "gpt-4o-mini",
+            api_key=request.api_key,
+            base_url=request.api_base_url,
+            max_tokens=5
+        )
+        llm.invoke("Hi")
+        return {"status": "success", "message": "Connection successful!"}
     except Exception as e:
-        # Fallback if Ollama is unreachable
-        return {"models": ["llama3:8b", "mistral:latest", "gemma2:2b"]}
+        raise HTTPException(status_code=400, detail=str(e))
+
+# (Auth endpoints removed)
 
 @app.get("/api/sessions")
 def get_sessions():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute("SELECT * FROM sessions ORDER BY created_at DESC")
-    sessions = [dict(row) for row in c.fetchall()]
-    conn.close()
-    return {"sessions": sessions}
+    sessions = DB.execute("SELECT * FROM sessions ORDER BY created_at DESC", fetchall=True)
+    return {"sessions": sessions or []}
 
 @app.get("/api/sessions/{session_id}")
 def get_session(session_id: int):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
-    session = c.fetchone()
+    session = DB.execute("SELECT * FROM sessions WHERE id = ?", (session_id,), fetchone=True)
     if not session:
-        conn.close()
         raise HTTPException(status_code=404, detail="Session not found")
-    
-    c.execute("SELECT role, content FROM messages WHERE session_id = ? ORDER BY id ASC", (session_id,))
-    messages = [dict(row) for row in c.fetchall()]
-    
-    conn.close()
+    messages = DB.execute("SELECT role, content FROM messages WHERE session_id = ? ORDER BY id ASC", (session_id,), fetchall=True) or []
     
     # Calculate profile quickly
     try:
@@ -160,12 +246,7 @@ def upload_file(file: UploadFile = File(...)):
             raise HTTPException(status_code=400, detail="Invalid file type. Please upload a CSV or Excel file.")
             
         # Create session in DB
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("INSERT INTO sessions (filename, filepath) VALUES (?, ?)", (file.filename, filepath))
-        session_id = c.lastrowid
-        conn.commit()
-        conn.close()
+        session_id = DB.execute("INSERT INTO sessions (filename, filepath) VALUES (?, ?)", (file.filename, filepath), commit=True, insert=True)
         
         profile = {
             "rows": len(df),
@@ -182,10 +263,14 @@ def upload_file(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
 
+from typing import Optional
+
 class ChatRequest(BaseModel):
     session_id: int
     prompt: str
-    model_name: str = "llama3:8b"
+    model_name: str = "nvidia/nemotron-3-ultra-550b-a55b"
+    api_key: Optional[str] = None
+    api_base_url: Optional[str] = None
 
 @app.post("/api/chat")
 def chat(request: ChatRequest):
@@ -193,21 +278,13 @@ def chat(request: ChatRequest):
     prompt = request.prompt
     model_name = request.model_name
     
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT filepath FROM sessions WHERE id = ?", (session_id,))
-    row = c.fetchone()
-    
+    row = DB.execute("SELECT filepath FROM sessions WHERE id = ?", (session_id,), fetchone=True)
     if not row:
-        conn.close()
         raise HTTPException(status_code=404, detail="Session not found")
-        
-    filepath = row[0]
+    filepath = row['filepath'] if isinstance(row, dict) else row[0]
     
     # Save user message
-    c.execute("INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)", (session_id, "user", prompt))
-    conn.commit()
-    conn.close()
+    DB.execute("INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)", (session_id, "user", prompt), commit=True)
     
     try:
         # Load dataset
@@ -216,16 +293,24 @@ def chat(request: ChatRequest):
         else:
             df = pd.read_excel(filepath)
             
-        # Load the LLM
-        llm = ChatOllama(model=model_name, temperature=0, num_ctx=8192)
+        # Determine API Key and Base URL
+        api_key = request.api_key or "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"
+        base_url = request.api_base_url or "https://integrate.api.nvidia.com/v1"
+        
+        # Load the LLM using the appropriate API
+        llm = ChatOpenAI(
+            model=model_name, 
+            temperature=1, 
+            max_tokens=16384,
+            base_url=base_url,
+            api_key=api_key,
+            model_kwargs={"extra_body": {"chat_template_kwargs": {"enable_thinking": True}, "reasoning_budget": 16384}} if "nvidia" in base_url else {}
+        )
         
         # Fetch last 4 messages (2 turns) to keep context small
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("SELECT role, content FROM messages WHERE session_id = ? ORDER BY id DESC LIMIT 5", (session_id,))
-        history_rows = c.fetchall()
+        history_rows = DB.execute("SELECT role, content FROM messages WHERE session_id = ? ORDER BY id DESC LIMIT 5", (session_id,), fetchall=True) or []
+        history_rows = [(r['role'], r['content']) for r in history_rows] if history_rows else []
         history_rows.reverse()
-        conn.close()
         
         history_rows = history_rows[:-1] # exclude the current prompt we just inserted
         context_str = ""
@@ -255,7 +340,7 @@ def chat(request: ChatRequest):
             llm,
             df,
             verbose=True,
-            agent_type="zero-shot-react-description",
+            agent_type="tool-calling",
             allow_dangerous_code=True,
             prefix=prefix_instructions,
             max_iterations=10,
@@ -264,8 +349,22 @@ def chat(request: ChatRequest):
             number_of_head_rows=3
         )
         
-        response = pandas_df_agent.invoke(augmented_prompt)
-        assistant_response = response["output"]
+        import time
+        max_retries = 4
+        assistant_response = ""
+        for attempt in range(max_retries):
+            try:
+                response = pandas_df_agent.invoke(augmented_prompt)
+                assistant_response = response["output"]
+                break
+            except Exception as e:
+                error_str = str(e)
+                if "ResourceExhausted" in error_str or "429" in error_str:
+                    if attempt < max_retries - 1:
+                        print(f"Rate limit hit. Retrying in 10 seconds... (Attempt {attempt+1}/{max_retries})")
+                        time.sleep(10)
+                        continue
+                raise e
         
         # Auto-save any charts created by the agent
         import matplotlib.pyplot as plt
@@ -278,21 +377,13 @@ def chat(request: ChatRequest):
             assistant_response += f"\n\n![chart](/static/charts/{chart_filename})"
         
         # Save assistant message
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)", (session_id, "assistant", assistant_response))
-        conn.commit()
-        conn.close()
+        DB.execute("INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)", (session_id, "assistant", assistant_response), commit=True)
         
         return {"response": assistant_response}
     except Exception as e:
         error_msg = f"I'm sorry, I couldn't process your request. Error details: {str(e)}"
         
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)", (session_id, "assistant", error_msg))
-        conn.commit()
-        conn.close()
+        DB.execute("INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)", (session_id, "assistant", error_msg), commit=True)
         
         return {"response": error_msg}
 

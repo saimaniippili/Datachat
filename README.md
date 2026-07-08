@@ -1,65 +1,65 @@
-# DataChat: Conversational Data Analysis with Ollama
+# DataChat 📊🤖
 
-DataChat is an interactive web application that lets you analyze and explore your datasets using natural language. Simply upload your CSV or Excel file, and start asking questions about your data in plain English. DataChat leverages the power of Ollama for language understanding and LangChain for seamless integration with data analysis tools.
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
+![Vanilla JS](https://img.shields.io/badge/Vanilla%20JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-121212?style=for-the-badge&logo=chainlink&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)
 
-[![Ollama](https://img.shields.io/badge/Ollama-gemma%3A2b-blueviolet)](https://ollama.ai/)
-[![LangChain](https://img.shields.io/badge/LangChain-latest-blue)](https://python.langchain.com/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-latest-green)](https://fastapi.tiangolo.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+DataChat is an intelligent, conversational data analysis platform. It allows users to upload datasets (CSV, Excel) and chat with an AI assistant to extract insights, generate charts, and summarize data dynamically. 
 
 ##  Application Interface
 
 <img width="1919" height="1012" alt="image" src="https://github.com/user-attachments/assets/388a8501-d22d-4449-8a55-af5d63a212d0" />
 
+## 🚀 How It Works
 
-##  Features
+1. **Upload Data:** Users drag-and-drop a `.csv` or `.xlsx` file into the interface.
+2. **AI Processing:** The backend uses LangChain's `create_pandas_dataframe_agent` to ingest the dataset into a Pandas DataFrame.
+3. **Conversational Insights:** Users ask questions in natural language (e.g., *"Show me the top 10 products by revenue"* or *"Plot a bar chart of monthly sales"*).
+4. **Execution & Visualization:** The AI interprets the intent, writes the required Python code using Pandas, executes it safely to find the answer, and generates Matplotlib charts.
+5. **Report Generation:** Users can export the entire conversation and generated visual insights into a professional PDF report.
 
-*   **Intuitive Chat Interface:** Ask questions about your data in a conversational manner.
-*   **Support for CSV and Excel Files:** Easily upload your data from common file formats.
-*   **Powerful Data Analysis:** Get answers to questions about trends, statistics, distributions, and relationships within your data.
-*   **Seamless Integration:** Leverages LangChain to connect Ollama with data analysis tools like Pandas.
+## 🏗️ Architecture & Approach
 
-##  System Requirements
+DataChat is designed with a **Separated Architecture**, splitting the frontend and backend to optimize deployment and scalability.
 
-To run this project smoothly (especially since it relies on running local Large Language Models), your system should meet the following requirements:
+### Frontend
+- **Tech:** HTML, CSS, Vanilla JavaScript.
+- **Approach:** We avoided heavy frameworks to ensure extreme performance and simplicity. The frontend features a sleek, monochrome design (supporting both light and dark modes) and dynamically communicates with the backend via asynchronous `fetch` API calls.
+- **Hosting:** Configured for **Vercel** as a static site using `vercel.json` for custom routing.
 
-*   **Processor (CPU):** A modern multi-core processor (Intel Core i5/Ryzen 5 or better). An Apple Silicon (M1/M2/M3) Mac or a dedicated NVIDIA GPU is highly recommended for faster inference speeds.
-*   **RAM:** 
-    *   **Minimum:** 8 GB RAM (sufficient for smaller 2B models).
-    *   **Recommended:** 16 GB to 32 GB RAM (necessary for smoothly running 8B parameter models like `llama3:8b` alongside pandas operations).
-*   **Storage:** At least 10-15 GB of free space for downloading the Ollama models and Python dependencies.
+### Backend
+- **Tech:** Python, FastAPI, LangChain, SQLite/PostgreSQL.
+- **Approach:** FastAPI provides an incredibly fast asynchronous server. The core logic relies on **LangChain** and Large Language Models (LLMs like OpenAI or NVIDIA models) to act as an agent that reasons over data.
+- **Data Persistence:** Uploaded files and generated charts are saved to the server disk. Chat histories are saved in a SQL database (SQLite for local development, dynamically switching to PostgreSQL via the `DATABASE_URL` environment variable for production).
+- **Security:** We implemented robust CORS policies using FastAPI's `CORSMiddleware` to allow the Vercel frontend to securely query the API.
+- **Hosting:** Configured for **Render** (or similar containerized platforms) as a stateful Web Service with a Persistent Disk.
 
-##  Supported Models
+## 🛠️ Key Challenges Solved
 
-DataChat supports various models via Ollama. You can select them directly from the UI dropdown:
+- **Agent Context Limits:** We faced issues where the LLM agent would fail after multiple turns because the conversational history became too large. We solved this by implementing selective memory handling and strict token limits, ensuring the agent remains focused on the immediate data task.
+- **Dependency Conflicts:** Balancing `langchain-experimental`, newer `pydantic` versions, and `openai` clients caused environment crashes. We systematically resolved versioning conflicts to stabilize the Python environment.
+- **Stateful Deployment:** Standard serverless deployments (like Vercel) destroy local files, breaking file uploads and chart generation. We designed a dual-deployment strategy (Vercel + Render) so the stateful Python backend could securely store data while the frontend remains globally distributed.
 
-*   <span style="color: #ff5722; font-weight: bold;">llama3:8b</span> - Excellent for reasoning and complex data analysis (default).
-*   <span style="color: #9c27b0; font-weight: bold;">gemma:2b</span> - Very lightweight and fast.
-*   <span style="color: #4caf50; font-weight: bold;">mistral:latest</span> - A strong alternative to Llama 3 for data tasks.
-*   <span style="color: #2196f3; font-weight: bold;">gemma2:2b</span> - Google's updated lightweight model.
-
-##  Getting Started
+## 💻 Local Setup
 
 ### 1. Prerequisites
 *   **Python 3.9+**
-*   **Ollama** installed and running (download from [https://ollama.ai/](https://ollama.ai/))
 
-### 2. Pull Required Models
-Open your terminal and pull the models you want to use:
-```bash
-ollama pull llama3:8b
-```
-
-### 3. Installation
-
+### 2. Installation
 ```bash
 git clone https://github.com/saimaniippili/Datachat.git
 cd Datachat
 pip install -r requirements.txt
 ```
 
-### 4. Running the App
-
+### 3. Running the App
 ```bash
 python src/main.py
 ```
@@ -77,11 +77,6 @@ python src/main.py
 *   "How many sales were made in each region?"
 *   "Which product category has the highest revenue?"
 *   "Show me a histogram of customer ages."
-
-##  Customization
-
-*   **LLM:** Experiment with different Ollama models for improved performance.
-*   **Data Analysis Tools:** Extend DataChat by adding custom LangChain tools to integrate with other analysis libraries or APIs.
 
 ##  License
 This project is licensed under the Apache 2.0 License.

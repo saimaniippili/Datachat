@@ -3,6 +3,7 @@ langchain
 langchain-community
 langchain-experimental
 langchain-ollama
+langchain-openai
 pandas
 openpyxl
 tabulate
@@ -13,5 +14,7 @@ jinja2
 numpy
 scikit-learn
 matplotlib
+gunicorn
+psycopg2-binary
 
 -e .

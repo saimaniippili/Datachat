@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/src/templates/index.html"
+    },
+    {
+      "source": "/static/(.*)",
+      "destination": "/src/static/$1"
+    }
+  ]
+}
