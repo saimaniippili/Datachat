@@ -131,8 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (modelSelect.value) selectedModel = modelSelect.value;
         })
         .catch(err => {
-            modelSelect.innerHTML = "<option value='nvidia/nemotron-3-ultra-550b-a55b'>NVIDIA/NEMOTRON-3</option>";
-            selectedModel = "nvidia/nemotron-3-ultra-550b-a55b";
+            modelSelect.innerHTML = "<option value='gpt-4o-mini'>GPT-4o Mini</option>";
+            selectedModel = "gpt-4o-mini";
         });
 
     modelSelect.addEventListener("change", (e) => {

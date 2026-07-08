@@ -168,7 +168,7 @@ async def read_root(request: Request):
 @app.get("/api/models")
 def get_models():
     """Return available NVIDIA API models."""
-    return {"models": ["nvidia/nemotron-3-ultra-550b-a55b", "gpt-4o", "gpt-4o-mini", "llama3"]}
+    return {"models": ["gpt-4o-mini", "meta/llama-3.1-70b-instruct", "nvidia/nemotron-3-ultra-550b-a55b", "gpt-4o"]}
 
 class ConnectionCheckRequest(BaseModel):
     api_key: str
@@ -264,7 +264,7 @@ from typing import Optional
 class ChatRequest(BaseModel):
     session_id: int
     prompt: str
-    model_name: str = "nvidia/nemotron-3-ultra-550b-a55b"
+    model_name: str = "gpt-4o-mini"
     api_key: Optional[str] = None
     api_base_url: Optional[str] = None
 
@@ -339,7 +339,7 @@ def chat(request: ChatRequest):
             agent_type="tool-calling",
             allow_dangerous_code=True,
             prefix=prefix_instructions,
-            max_iterations=25,
+            max_iterations=10,
             max_execution_time=300,
             agent_executor_kwargs={"handle_parsing_errors": True},
             number_of_head_rows=3
