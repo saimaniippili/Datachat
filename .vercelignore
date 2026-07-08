@@ -1,0 +1,4 @@
+requirements.txt
+setup.py
+*.py
+src/main.py
