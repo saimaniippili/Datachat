@@ -332,11 +332,14 @@ def chat(request: ChatRequest):
             "Do not invent new tool names."
         )
 
+        # Use tool-calling only for OpenAI, otherwise use ReAct for Llama models
+        agent_type = "tool-calling" if "gpt" in model_name else "zero-shot-react-description"
+
         pandas_df_agent = create_pandas_dataframe_agent(
             llm,
             df,
             verbose=True,
-            agent_type="tool-calling",
+            agent_type=agent_type,
             allow_dangerous_code=True,
             prefix=prefix_instructions,
             max_iterations=10,
