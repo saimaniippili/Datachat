@@ -296,8 +296,8 @@ def chat(request: ChatRequest):
         # Load the LLM using the appropriate API
         llm = ChatOpenAI(
             model=model_name, 
-            temperature=1, 
-            max_tokens=16384,
+            temperature=0, 
+            max_tokens=1024,
             base_url=base_url,
             api_key=api_key,
             model_kwargs={"extra_body": {"chat_template_kwargs": {"enable_thinking": True}, "reasoning_budget": 16384}} if "nvidia" in base_url else {}
