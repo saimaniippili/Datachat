@@ -1,5 +1,5 @@
 // Update this to your Render URL when deploying to Vercel (e.g., "https://my-app.onrender.com")
-const BACKEND_URL = "https://datachat-0vvd.onrender.com";
+const BACKEND_URL = "";
 
 document.addEventListener("DOMContentLoaded", () => {
     // UI Elements
