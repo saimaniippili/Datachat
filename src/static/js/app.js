@@ -131,8 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (modelSelect.value) selectedModel = modelSelect.value;
         })
         .catch(err => {
-            modelSelect.innerHTML = "<option value='meta/llama-3.1-8b-instruct'>Llama 3.1 8B</option>";
-            selectedModel = "meta/llama-3.1-8b-instruct";
+            modelSelect.innerHTML = "<option value='meta/llama-3.1-70b-instruct'>Llama 3.1 70B</option>";
+            selectedModel = "meta/llama-3.1-70b-instruct";
         });
 
     modelSelect.addEventListener("change", (e) => {
